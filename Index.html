@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShadowSend - Self-Destructing Messages</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- CryptoJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="text-gray-200 font-sans flex items-center justify-center min-h-screen p-4">
+
+    <!-- Main Container -->
+    <div id="mainContainer" class="container glassmorphism max-w-2xl w-full mx-auto p-6 sm:p-8 rounded-2xl shadow-2xl transition-all duration-300 relative">
+
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-center text-green-400 tracking-wider flex items-center justify-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
+                ShadowSend
+            </h1>
+            <p class="text-gray-400 mt-2">Self-destructing, encrypted messages and images.</p>
+        </div>
+
+        <!-- Form -->
+        <form id="cryptoForm" class="relative">
+            <!-- Input Section -->
+            <fieldset class="border border-gray-700 p-4 rounded-lg mb-6">
+                <legend class="px-2 text-green-400 font-medium">Input</legend>
+                <div class="space-y-4">
+                    <div>
+                        <label for="text" class="block mb-2 text-sm font-medium text-gray-300">Text / Ciphertext</label>
+                        <textarea id="text" rows="4" class="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white"></textarea>
+                    </div>
+                    <div id="imageUploadContainer">
+                        <label for="imageUpload" class="block mb-2 text-sm font-medium text-gray-300">Or Upload Image</label>
+                        <input type="file" id="imageUpload" accept="image/*" class="w-full text-sm text-gray-400 file:bg-green-600 file:text-white">
+                    </div>
+                </div>
+            </fieldset>
+
+            <!-- Settings Section -->
+            <fieldset class="border border-gray-700 p-4 rounded-lg mb-6">
+                <legend class="px-2 text-green-400 font-medium">Settings</legend>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-300">Operation</label>
+                        <div class="flex items-center space-x-4 p-3 bg-gray-800 border border-gray-600 rounded-lg">
+                            <label class="flex items-center">
+                                <input checked id="encrypt" type="radio" value="encrypt" name="operation" class="w-4 h-4 text-green-600">
+                                <span class="ms-2 text-sm font-medium text-gray-200">Encrypt</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input id="decrypt" type="radio" value="decrypt" name="operation" class="w-4 h-4 text-red-600">
+                                <span class="ms-2 text-sm font-medium text-gray-200">Decrypt</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div id="timeLimitContainer">
+                        <label for="timeLimit" class="block mb-2 text-sm font-medium text-gray-300">Self-Destruct in (Minutes)</label>
+                        <input type="number" id="timeLimit" min="1" class="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white">
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <label for="password" class="block mb-2 text-sm font-medium text-gray-300">Password</label>
+                    <input type="password" id="password" class="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white">
+                </div>
+            </fieldset>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4">
+                <button type="submit" class="w-full text-white bg-green-600 rounded-lg px-5 py-3">Process</button>
+                <button type="button" id="resetBtn" class="w-full text-white bg-gray-600 rounded-lg px-5 py-3">Reset</button>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div id="loadingSpinner" class="absolute inset-0 bg-gray-900 bg-opacity-70 flex items-center justify-center rounded-2xl hidden">
+                <svg class="animate-spin h-10 w-10 text-green-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.37 0 0 5.37 0 12h4z"></path>
+                </svg>
+            </div>
+        </form>
+
+        <!-- Result Section -->
+        <div id="resultSection" class="mt-8"></div>
+
+        <!-- Translator Section -->
+        <div id="translatorSection" class="mt-8">
+            <fieldset class="border border-gray-700 p-4 rounded-lg">
+                <legend class="px-2 text-blue-400 font-medium">Quick Translator</legend>
+                <textarea id="translatorInput" rows="3" class="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white"></textarea>
+                <div class="flex gap-4 mt-2">
+                    <select id="translatorLanguageSelector" class="bg-gray-800 border border-gray-600 rounded-lg text-white text-sm p-2 flex-grow">
+                        <option value="en">English</option>
+                        <option value="hi">हिन्दी</option>
+                        <option value="te">తెలుగు</option>
+                        <option value="es">Español</option>
+                    </select>
+                    <button id="translateButton" class="text-white bg-blue-600 rounded-lg px-5">Translate</button>
+                </div>
+                <textarea id="translatorOutput" rows="3" readonly class="w-full p-3 bg-gray-900 border border-gray-600 rounded-lg text-blue-300 mt-2"></textarea>
+            </fieldset>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-green-600 text-white py-2 px-4 rounded-lg opacity-0 transition-all duration-300"></div>
+
+    <!-- JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>
